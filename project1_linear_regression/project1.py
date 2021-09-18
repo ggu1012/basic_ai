@@ -117,10 +117,14 @@ class LinearRegressor:
         Returns:
             
         """
+
+        self.lr = lr # float
+        self.tau = tau # float
+        self.dim = dim # int
+
+        self.weight = np.zeros(dim)
+        self.loss_history = np.array([])
         
-        ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
-        #################
     
     def prediction(self, X):
         """
@@ -135,7 +139,9 @@ class LinearRegressor:
         """
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        pred = np.dot(X, self.weight)
+
         #################
         
         return pred
@@ -155,7 +161,15 @@ class LinearRegressor:
         """
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        pred = self.prediction(X)
+        sz = y.shape[0]
+
+        y_Hw = y - pred
+
+        error = np.dot(np.transpose(y_Hw), y_Hw) / sz          
+        gradient = -2 * np.dot(np.transpose(X), y_Hw) / sz
+
         #################
         
         return error, gradient
@@ -174,7 +188,31 @@ class LinearRegressor:
         """
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        ### Initialization 
+        error, gradient = self.compute_gradient(X,y)
+
+        threshold = self.tau
+        lr = self.lr
+        infNorm = lr * np.max(np.abs(gradient))
+
+                
+        iter = 1
+
+        ### Gradient descent
+
+        while(infNorm >= threshold):            
+
+            self.weight = self.weight - lr * gradient
+            error, gradient = self.compute_gradient(X,y)
+            
+            infNorm = lr * np.max(np.abs(gradient))
+
+            print("iter: %d, error: %f, infNorm: %f" %(iter, error, infNorm))
+
+            self.loss_history = np.concatenate((self.loss_history, [error]))
+            iter = iter+1
+
         #################
         
         
@@ -187,10 +225,15 @@ class LinearRegressor:
         
         Returns:
         
-        """
+        """        
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        plt.plot(self.loss_history)
+        plt.xlabel('iterations')
+        plt.ylabel('Average loss')
+        plt.title('Average loss over # of iterations')
+
         #################
         
         
@@ -211,7 +254,15 @@ class LinearRegressor:
         """
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+        
+        featureSize = input_features.shape[0]
+        normalizedInputFeatures = np.ones(featureSize + 1) # +1 for bias
+        for i in range(featureSize):
+            normalizedInputFeatures[i+1] = (input_features[i] - min_value[i]) / (max_value[i] - min_value[i])
+        
+        normalizedPrice = np.dot(normalizedInputFeatures, self.weight)
+        price = normalizedPrice * (max_value[featureSize] - min_value[featureSize]) + min_value[featureSize]
+        
         #################
         
         return price
@@ -231,7 +282,12 @@ def LR_with_closed_form(X, y):
             
     """
     ### CODE HERE ###
-    raise NotImplementedError("Erase this line and write down your code.")
+    
+    HT = np.transpose(X)
+    HTH = np.dot(HT, X)
+    weight = np.dot(np.dot(np.linalg.inv(HTH), HT), y) # inv(HTH)*HT*y
+
+
     #################
     return weight
     
