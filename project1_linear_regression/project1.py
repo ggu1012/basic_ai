@@ -196,9 +196,6 @@ class LinearRegressor:
         lr = self.lr
         infNorm = lr * np.max(np.abs(gradient))
 
-                
-        iter = 1
-
         ### Gradient descent
 
         while(infNorm >= threshold):            
@@ -207,11 +204,7 @@ class LinearRegressor:
             error, gradient = self.compute_gradient(X,y)
             
             infNorm = lr * np.max(np.abs(gradient))
-
-            print("iter: %d, error: %f, infNorm: %f" %(iter, error, infNorm))
-
             self.loss_history = np.concatenate((self.loss_history, [error]))
-            iter = iter+1
 
         #################
         
