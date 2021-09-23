@@ -122,7 +122,9 @@ class LinearRegressor:
         self.tau = tau # float
         self.dim = dim # int
 
-        self.weight = np.zeros(dim)
+        self.weight = np.zeros(dim)        
+        self.weight[0] = 1 # Bias = 1
+
         self.loss_history = np.array([])
         
     
@@ -163,12 +165,16 @@ class LinearRegressor:
         ### CODE HERE ###
 
         pred = self.prediction(X)
-        sz = y.shape[0]
+        N = y.shape[0]
 
         y_Hw = y - pred
 
-        error = np.dot(np.transpose(y_Hw), y_Hw) / sz          
-        gradient = -2 * np.dot(np.transpose(X), y_Hw) / sz
+        # RSS
+        error = np.dot(np.transpose(y_Hw), y_Hw)
+        # Average RSS
+        error = error / N 
+
+        gradient = -2 * np.dot(np.transpose(X), y_Hw) / N
 
         #################
         
@@ -190,23 +196,22 @@ class LinearRegressor:
         ### CODE HERE ###
 
         ### Initialization 
-        error, gradient = self.compute_gradient(X,y)
 
         threshold = self.tau
         lr = self.lr
+
+        error, gradient = self.compute_gradient(X,y)
         infNorm = lr * np.max(np.abs(gradient))
+        self.loss_history = np.concatenate((self.loss_history, [error]))
 
         ### Gradient descent
-
-        while(infNorm >= threshold):            
-
+        while(infNorm >= threshold):    
             self.weight = self.weight - lr * gradient
-            error, gradient = self.compute_gradient(X,y)
-            
+
+            error, gradient = self.compute_gradient(X,y)            
             infNorm = lr * np.max(np.abs(gradient))
             self.loss_history = np.concatenate((self.loss_history, [error]))
 
-        #################
         
         
     def plot_loss_history(self):
