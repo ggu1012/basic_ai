@@ -1,3 +1,4 @@
+from numpy.core.fromnumeric import var
 import pandas as pd
 import numpy as np
 import random
@@ -8,9 +9,11 @@ from matplotlib.legend_handler import HandlerTuple
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 
-N = 100
-M = 50
-K = 100
+N = 100 # The number of training sets
+M = 50 # The number of training samples
+# 100 sets x (50x1) training dataset
+
+K = 100 # The number of test samples
 
 np.random.seed(seed=1000)
 
@@ -116,7 +119,9 @@ def mse(y_target, y_pred):
     assert y_pred.shape == (M, 1) or y_pred.shape == (K, 1), y_pred.shape
     
     ### CODE HERE ###
-    raise NotImplementedError("Erase this line and write down your code.")
+
+    mse = np.sum((y_target - y_pred)**2) / y_target.shape[0]
+
     #################
     
     assert isinstance(mse, float)
@@ -136,10 +141,15 @@ def bias(y_true, y_pred):
         bias_square (float) : The bias squared of an estimator
     """
     assert y_true.shape == (K, 1), y_true.shape
-    assert y_pred.shape == (K, N), y_pred.shape
+    assert y_pred.shape == (K, N), y_pred.shape # (K,N) = (# of test samples, # of training sets)
     
     ### CODE HERE ###
-    raise NotImplementedError("Erase this line and write down your code.")
+
+    y_true = y_true.flatten() # (100,1) --> (100,) same size as y_pred[i]
+
+    avgDegree = np.sum(y_pred, axis=0) / K  # average of model 'y' values at fixed 'x' value
+    bias_square = np.average((y_true - avgDegree) ** 2)
+
     #################
     
     assert isinstance(bias_square, float)
@@ -159,10 +169,13 @@ def variance(y_pred_average, y_pred):
         variance (float) : The variance of an estimator
     """
     assert y_pred_average.shape == (K, 1), y_pred_average.shape
-    assert y_pred.shape == (K, N), y_pred.shape
+    assert y_pred.shape == (K, N), y_pred.shape # (K,N) = (# of test samples, # of training sets)
     
     ### CODE HERE ###
-    raise NotImplementedError("Erase this line and write down your code.")
+
+    squaredSum = np.sum(y_pred ** 2, axis=0) / K
+
+    variance = np.average(squaredSum - (y_pred_average ** 2))
     #################
     
     assert isinstance(variance, float)
@@ -201,14 +214,42 @@ def assessing_performance(X_train_set, y_train_set, X_test, y_test, models):
         y_pred_list = []
         train_mse_list = []
         test_mse_list = []
-        
+
         for i in range(N):
-            X_train = X_train_set[i]
-            y_train = y_train_set[i]
+            X_train = X_train_set[i] # (50,1) x 100 sets
+            y_train = y_train_set[i] # (50,1) x 100 sets
             ### CODE HERE ###
-            raise NotImplementedError("Erase this line and write down your code.")
-        #################
-        
+
+            # modeling
+            linReg = regression(X_train, y_train, degree)
+
+            # two outputs for different x-axis sample
+            y_pred_train = predict(X_train, linReg, degree)
+            y_pred_test = predict(X_test, linReg, degree)
+
+            # y_pred_comparison
+            y_pred_list.append(y_pred_test.flatten().tolist())
+            # train_mse_comparison
+            train_mse_list.append(mse(y_train, y_pred_train))
+            # test_mse_comparison
+            test_mse_list.append(mse(y_test, y_pred_test))
+
+        y_pred_list = np.array(y_pred_list)
+        train_mse_list = np.array(train_mse_list)
+        test_mse_list = np.array(test_mse_list)
+
+
+        pred_average = np.sum(y_pred_list, axis=0) / K
+        pred_average = pred_average.reshape(-1,1)
+
+        y_pred_comparison[model] = y_pred_list # numpy array
+        train_mse_comparison[model] = np.average(train_mse_list)  # float
+        test_mse_comparison[model] = np.average(test_mse_list) # float
+        bias_comparison[model] = bias(y_test, y_pred_list) # float
+        variance_comparison[model] = variance(pred_average, y_pred_list) # float
+
+        #################        
+
         
     return y_pred_comparison, train_mse_comparison, test_mse_comparison, bias_comparison, variance_comparison
 
@@ -248,7 +289,8 @@ def plot_comparison(train_mse_comparison, test_mse_comparison, bias_comparison, 
     variance = normalize(list(variance_comparison.values()))
     
     ### CODE HERE ###
-    raise NotImplementedError("Erase this line and write down your code.")
+
+
     #################
 
 def make_table(categories, train_mse_comparison, test_mse_comparison, bias_comparison, variance_comparison):
@@ -286,7 +328,9 @@ def plot_models(models, X_test, y_test, y_pred_comparison):
     """
     
     ### CODE HERE ###
-    raise NotImplementedError("Erase this line and write down your code.")
+
+    canvas = plt.figure(figsize=(30,30))
+
     #################
 
 def plot_box_prediction_error(models, X_test, y_test, y_pred_comparison):
