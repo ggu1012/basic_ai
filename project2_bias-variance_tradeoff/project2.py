@@ -147,7 +147,7 @@ def bias(y_true, y_pred):
 
     y_true = y_true.flatten() # (100,1) --> (100,) same size as y_pred[i]
 
-    avgDegree = np.sum(y_pred, axis=0) / K  # average of model 'y' values at fixed 'x' value
+    avgDegree = np.average(y_pred, axis=0)  # average of model 'y' values at fixed 'x' value
     bias_square = np.average((y_true - avgDegree) ** 2)
 
     #################
@@ -173,7 +173,7 @@ def variance(y_pred_average, y_pred):
     
     ### CODE HERE ###
 
-    squaredSum = np.sum(y_pred ** 2, axis=0) / K
+    squaredSum = np.average(y_pred ** 2, axis=0)
 
     variance = np.average(squaredSum - (y_pred_average ** 2))
     #################
@@ -239,7 +239,7 @@ def assessing_performance(X_train_set, y_train_set, X_test, y_test, models):
         test_mse_list = np.array(test_mse_list)
 
 
-        pred_average = np.sum(y_pred_list, axis=0) / K
+        pred_average = np.average(y_pred_list, axis=0)
         pred_average = pred_average.reshape(-1,1)
 
         y_pred_comparison[model] = y_pred_list # numpy array
@@ -290,6 +290,13 @@ def plot_comparison(train_mse_comparison, test_mse_comparison, bias_comparison, 
     
     ### CODE HERE ###
 
+    plt.plot(x, train_mse, label='Train mse')
+    plt.plot(x, test_mse, label='Test mse')
+    plt.plot(x, bias, label='Bias squared')
+    plt.plot(x, variance, label='Variance')
+    plt.title('Bias vs Variance trade-off')
+    plt.legend()
+
 
     #################
 
@@ -329,7 +336,23 @@ def plot_models(models, X_test, y_test, y_pred_comparison):
     
     ### CODE HERE ###
 
-    canvas = plt.figure(figsize=(30,30))
+    canvas = plt.figure(figsize=(20, 20))
+    
+
+    for idx, model in enumerate(models):
+        plt.subplot(4, 2, idx+1)
+        pred = y_pred_comparison[model]
+        plt.plot(X_test, y_test, color='red', linewidth=3.0, label='True model')
+
+        for j in range(K):
+            if j==0: plt.scatter(X_test, pred[j], color='silver', alpha=0.2, label='Prediction')
+            else: plt.scatter(X_test, pred[j], color='silver', alpha=0.2)
+
+        plt.scatter(X_test, np.average(pred, axis=0), color='lightsalmon', label='Avg. prediction')
+        plt.ylim([-2, 8])
+        plt.legend()
+        plt.title(model)
+
 
     #################
 
