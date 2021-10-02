@@ -28,7 +28,12 @@ class LinearRegressor:
         """
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        self.tau = tau
+        self.dim = dim
+        self.weight = []
+        self.loss_history = []
+
         #################
     
     def initialize_weight(self):
@@ -44,7 +49,9 @@ class LinearRegressor:
         """
         np.random.seed(0)
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        self.weight = np.random.normal(0, 1, self.dim)
+
         #################
     
     
@@ -61,7 +68,9 @@ class LinearRegressor:
         """
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        pred = np.dot(X, self.weight)
+
         #################
         return pred
     
@@ -79,7 +88,10 @@ class LinearRegressor:
         """
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        pred = self.prediction(X)
+        residual = np.sum((y - pred)**2)
+
         #################
         return residual
     
@@ -97,7 +109,36 @@ class LinearRegressor:
         """
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        self.initialize_weight()
+        weightDiff = np.zeros(self.dim)  
+
+        iter=1
+        while(1):            
+            iter=iter+1
+            residual = self.compute_residual(X, y)
+            self.loss_history = np.concatenate((self.loss_history, [residual]))
+
+            ### for 1...w_d coordinate descent
+            for j in range(self.dim):
+
+                featureDeleted = np.delete(X, j, axis = 1)
+                weightDeleted = np.delete(self.weight, j)
+                predDeleted = np.dot(featureDeleted, weightDeleted)
+
+                diffDeleted = y - predDeleted
+                h_j = X[:,j]
+                rho_j = np.dot(h_j.T, diffDeleted)
+
+                z_j = np.sum(h_j**2)
+                w_t = rho_j / z_j
+                weightDiff[j] = np.abs(w_t - self.weight[j])
+                self.weight[j] = w_t
+ 
+            if(np.max(weightDiff) < self.tau):  
+                print("iteration : %d" %(iter))              
+                break
+
         #################
         
         
@@ -112,7 +153,10 @@ class LinearRegressor:
         
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+        plt.plot(self.loss_history)
+        plt.xlabel('iterations')
+        plt.ylabel('Average loss')
+        plt.title('Average loss over # of iterations')
         #################
         
         
@@ -141,7 +185,8 @@ class RidgeRegressor(LinearRegressor):
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+        super().__init__(tau, dim)
+        self.lambda_ = lambda_
         #################
         
     def LR_with_coordinate_descent(self, X, y):
@@ -157,7 +202,41 @@ class RidgeRegressor(LinearRegressor):
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+        self.initialize_weight()
+        weightDiff = np.zeros(self.dim)  
+
+        iter=1
+        while(1):            
+            iter=iter+1
+            residual = self.compute_residual(X, y)
+            self.loss_history = np.concatenate((self.loss_history, [residual]))
+
+            ### for 1...w_d coordinate descent
+            for j in range(self.dim):
+
+                featureDeleted = np.delete(X, j, axis = 1)
+                weightDeleted = np.delete(self.weight, j)
+                predDeleted = np.dot(featureDeleted, weightDeleted)
+
+                diffDeleted = y - predDeleted
+                h_j = X[:,j]
+                rho_j = np.dot(h_j.T, diffDeleted)
+                z_j = np.sum(h_j**2)
+
+                # Do not penalize intercept
+                if j==0:
+                    w_t = rho_j / z_j
+     
+                else:                                   
+                    w_t = rho_j / (z_j + self.lambda_)
+                
+                weightDiff[j] = np.abs(w_t - self.weight[j])
+                self.weight[j] = w_t 
+ 
+            if(np.max(weightDiff) < self.tau):  
+                print("iteration : %d" %(iter))              
+                break
+
         #################
     
     
@@ -186,7 +265,8 @@ class LassoRegressor(LinearRegressor):
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+        super().__init__(tau, dim)
+        self.lambda_ = lambda_
         #################
     
     def LR_with_coordinate_descent(self, X, y):
@@ -202,7 +282,47 @@ class LassoRegressor(LinearRegressor):
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        self.initialize_weight()
+        weightDiff = np.zeros(self.dim)  
+
+        iter=1
+        while(1):            
+            iter=iter+1
+            residual = self.compute_residual(X, y)
+            self.loss_history = np.concatenate((self.loss_history, [residual]))
+
+            ### for 1...w_d coordinate descent
+            for j in range(self.dim):
+
+                featureDeleted = np.delete(X, j, axis = 1)
+                weightDeleted = np.delete(self.weight, j)
+                predDeleted = np.dot(featureDeleted, weightDeleted)
+
+                diffDeleted = y - predDeleted
+                h_j = X[:,j]
+                rho_j = np.dot(h_j.T, diffDeleted)
+                z_j = np.sum(h_j**2)
+
+                # Do not penalize intercept
+                if j==0:
+                    w_t = rho_j / z_j
+     
+                else: 
+                    halfLambda = self.lambda_ / 2
+                    if rho_j < -halfLambda:                                  
+                        w_t = (rho_j + halfLambda) / z_j                    
+                    elif (-halfLambda) <= rho_j and rho_j <= (halfLambda):
+                        w_t = 0
+                    else:
+                        w_t = (rho_j - halfLambda) / z_j
+                
+                weightDiff[j] = np.abs(w_t - self.weight[j])
+                self.weight[j] = w_t 
+ 
+            if(np.max(weightDiff) < self.tau):  
+                print("iteration : %d" %(iter))              
+                break
         #################
 
 
@@ -224,8 +344,17 @@ def stack_weight_over_lambda(X, y, model_type, tau, dim, lambda_list):
     """
     assert model_type in ['Lasso', 'Ridge'], f"model_type must be 'Ridge' or 'Lasso' but were given {model_type}"
     stacked_weight = np.zeros([len(lambda_list), X.shape[1]])
+
     ### CODE HERE ###
-    raise NotImplementedError("Erase this line and write down your code.")
+    for idx, lambda_ in enumerate(lambda_list):
+        if model_type == 'Ridge':
+            ridge = RidgeRegressor(tau=tau, dim=dim, lambda_=lambda_)
+            ridge.LR_with_coordinate_descent(X, y)
+            stacked_weight[idx] = ridge.weight
+        else:
+            lasso = LassoRegressor(tau=tau, dim=dim, lambda_=lambda_)
+            lasso.LR_with_coordinate_descent(X, y)
+            stacked_weight[idx] = lasso.weight
     #################
     return stacked_weight
 
@@ -243,7 +372,8 @@ def get_number_of_non_zero(weights):
     """
     num_non_zero = []
     ### CODE HERE ###
-    raise NotImplementedError("Erase this line and write down your code.")
+    for lambda_ in range(weights.shape[0]):
+        num_non_zero = np.concatenate((num_non_zero, [np.count_nonzero(weights[lambda_])]))
     #################
     return num_non_zero
 
@@ -266,7 +396,12 @@ def compute_errors(X, y, lambda_list, weights):
     assert len(lambda_list) == len(weights)
     rss_errors = []
     ### CODE HERE ###
-    raise NotImplementedError("Erase this line and write down your code.")
+
+    for lambda_ in range(weights.shape[0]):
+        pred = np.dot(X, weights[lambda_])
+        rss = np.sum((y - pred) ** 2)
+        rss_errors = np.concatenate((rss_errors, [rss]))
+
     #################
     return rss_errors
 
