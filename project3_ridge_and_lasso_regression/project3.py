@@ -115,9 +115,7 @@ class LinearRegressor:
 
         iter=1
         while(1):            
-            iter=iter+1
-            residual = self.compute_residual(X, y)
-            self.loss_history = np.concatenate((self.loss_history, [residual]))
+            iter=iter+1           
 
             ### for 1...w_d coordinate descent
             for j in range(self.dim):
@@ -134,9 +132,11 @@ class LinearRegressor:
                 w_t = rho_j / z_j
                 weightDiff[j] = np.abs(w_t - self.weight[j])
                 self.weight[j] = w_t
+            
+            residual = self.compute_residual(X, y)
+            self.loss_history = np.concatenate((self.loss_history, [residual]))
  
-            if(np.max(weightDiff) < self.tau):  
-                print("iteration : %d" %(iter))              
+            if(np.max(weightDiff) < self.tau):              
                 break
 
         #################
@@ -155,8 +155,8 @@ class LinearRegressor:
         ### CODE HERE ###
         plt.plot(self.loss_history)
         plt.xlabel('iterations')
-        plt.ylabel('Average loss')
-        plt.title('Average loss over # of iterations')
+        plt.ylabel('RSS loss')
+        plt.title('RSS loss over # of iterations')
         #################
         
         
@@ -207,9 +207,7 @@ class RidgeRegressor(LinearRegressor):
 
         iter=1
         while(1):            
-            iter=iter+1
-            residual = self.compute_residual(X, y)
-            self.loss_history = np.concatenate((self.loss_history, [residual]))
+            iter=iter+1            
 
             ### for 1...w_d coordinate descent
             for j in range(self.dim):
@@ -232,9 +230,11 @@ class RidgeRegressor(LinearRegressor):
                 
                 weightDiff[j] = np.abs(w_t - self.weight[j])
                 self.weight[j] = w_t 
+            
+            residual = self.compute_residual(X, y)
+            self.loss_history = np.concatenate((self.loss_history, [residual]))
  
-            if(np.max(weightDiff) < self.tau):  
-                print("iteration : %d" %(iter))              
+            if(np.max(weightDiff) < self.tau):           
                 break
 
         #################
@@ -288,9 +288,7 @@ class LassoRegressor(LinearRegressor):
 
         iter=1
         while(1):            
-            iter=iter+1
-            residual = self.compute_residual(X, y)
-            self.loss_history = np.concatenate((self.loss_history, [residual]))
+            iter=iter+1            
 
             ### for 1...w_d coordinate descent
             for j in range(self.dim):
@@ -319,9 +317,11 @@ class LassoRegressor(LinearRegressor):
                 
                 weightDiff[j] = np.abs(w_t - self.weight[j])
                 self.weight[j] = w_t 
+            
+            residual = self.compute_residual(X, y)
+            self.loss_history = np.concatenate((self.loss_history, [residual]))
  
-            if(np.max(weightDiff) < self.tau):  
-                print("iteration : %d" %(iter))              
+            if(np.max(weightDiff) < self.tau):            
                 break
         #################
 
@@ -347,6 +347,7 @@ def stack_weight_over_lambda(X, y, model_type, tau, dim, lambda_list):
 
     ### CODE HERE ###
     for idx, lambda_ in enumerate(lambda_list):
+        print("%d" %(lambda_), end=" ")
         if model_type == 'Ridge':
             ridge = RidgeRegressor(tau=tau, dim=dim, lambda_=lambda_)
             ridge.LR_with_coordinate_descent(X, y)

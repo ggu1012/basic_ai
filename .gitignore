@@ -1,3 +1,6 @@
 **/__pycache__/
 .vscode
 **/.ipynb_checkpoints/
+
+# Temporary numpy files for saving compute time
+**/*.npy
