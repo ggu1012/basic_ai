@@ -77,23 +77,23 @@ class LinearRegressor:
     def compute_residual(self, X, y):
         """
         Description:
-            Calculate residual between prediction and target.
+            Calculate RSS between prediction and target.
         
         Args:
             X (numpy array): Input data.
             y (numpy array or float): Target data.
         
         Returns:
-            residual (numpy array or float): residual.
+            RSS (numpy array or float): RSS.
         """
         
         ### CODE HERE ###
 
         pred = self.prediction(X)
-        residual = np.sum((y - pred)**2)
+        _RSS = np.sum((y - pred)**2)
 
         #################
-        return residual
+        return _RSS
     
     def LR_with_coordinate_descent(self, X, y):
         """
