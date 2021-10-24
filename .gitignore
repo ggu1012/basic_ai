@@ -4,3 +4,6 @@
 
 # Temporary numpy files for saving compute time
 **/*.npy
+
+# compare.ipynb file for result comparison
+**/compare.ipynb
