@@ -83,7 +83,7 @@ class DecisionTree(object):
         """
 
         self.node_stack = []
-        self.node_info = [[] for row in range(self.max_depth + 1)]
+        self.node_info = [[] for row in range(self.max_depth + 2)]
         self.depth = 0
         self.node_idx = 0
 
@@ -332,7 +332,7 @@ class DecisionTree(object):
         for sample_idx, sample in enumerate(X):
 
             column = 0
-            for depth in range(self.max_depth + 1):
+            for depth in range(self.max_depth + 2):
                 selected_node = self.node_info[depth][column]
 
                 if selected_node['is_leaf'] == 1:                    
