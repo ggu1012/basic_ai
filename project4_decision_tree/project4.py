@@ -83,7 +83,7 @@ class DecisionTree(object):
         """
 
         self.node_stack = []
-        self.node_info = [[] for row in range(self.max_depth + 2)]
+        self.node_info = [[] for row in range(self.max_depth + 1)]
         self.depth = 0
         self.node_idx = 0
 
@@ -110,21 +110,28 @@ class DecisionTree(object):
             self.node_idx += 1            
             to_be_splitted = self.node_stack.pop()     
 
+            # Early stopping condition - below min_split or max_depth is reached
+            if np.size(to_be_splitted) <= self.min_splits \
+                or self.depth == self.max_depth :
+                self.node_info[self.depth].append(self.leaf_node(to_be_splitted))
+                for n in reversed(range(self.depth + 1)):
+                    if len(self.node_info[n]) % 2 != 0:
+                        break                    
+                    self.depth = self.depth - 1  
+                continue
+
+
             right, left, selected_feature, optimal_threshold = self.best_split(to_be_splitted)        
             impurity_before = self.compute_gini_impurity(to_be_splitted, [])
             impurity_after = self.compute_gini_impurity(left, right)               
 
-            # Early stopping condition
-            if self.depth >= self.max_depth \
-                or np.size(to_be_splitted) <= self.min_splits \
-                or impurity_after >= impurity_before:
-                self.node_info[self.depth].append(self.leaf_node(to_be_splitted)) 
-
+            # Early stopping condition - no improvement
+            if impurity_after >= impurity_before:
+                self.node_info[self.depth].append(self.leaf_node(to_be_splitted))
                 for n in reversed(range(self.depth + 1)):
                     if len(self.node_info[n]) % 2 != 0:
                         break                    
-                    self.depth = self.depth - 1                                
-
+                    self.depth = self.depth - 1                              
                 continue     
 
 
@@ -262,42 +269,21 @@ class DecisionTree(object):
             ascending_order = np.unique(np.sort(self.X[index, feature]))
             
 
-            for idx in range(ascending_order.size):               
-
-                #####
-                threshold = ascending_order[idx]
+            for idx in range(ascending_order.size - 1):
+                threshold = (ascending_order[idx] + ascending_order[idx + 1]) / 2
                 indice_idx_number = np.argwhere(self.X[index, feature] <= threshold).flatten()
-                
                 left = index[indice_idx_number]
-                right = np.delete(index, indice_idx_number)                
+                right = np.delete(index, indice_idx_number)
 
                 weighted_impurity = self.compute_gini_impurity(left, right)
 
-                threshold_dict = dict() # {feature, impurity, threshold value}
+                threshold_dict = dict() # {feature, impurity, threshold value}                    
                 threshold_dict['feature'] = feature
                 threshold_dict['impurity'] = weighted_impurity
                 threshold_dict['threshold'] = threshold
 
                 threshold_list.append(threshold_dict)
-
-
-                ####
-                if idx != ascending_order.size - 1:
-                    threshold = (ascending_order[idx] + ascending_order[idx + 1]) / 2
-                    indice_idx_number = np.argwhere(self.X[index, feature] <= threshold).flatten()
-                    left = index[indice_idx_number]
-                    right = np.delete(index, indice_idx_number)
-
-                    weighted_impurity = self.compute_gini_impurity(left, right)
-
-                    threshold_dict = dict() # {feature, impurity, threshold value}                    
-                    threshold_dict['feature'] = feature
-                    threshold_dict['impurity'] = weighted_impurity
-                    threshold_dict['threshold'] = threshold
-
-                    threshold_list.append(threshold_dict)
                     
-
         min_item = min(threshold_list, key=lambda x:x['impurity'])
         selected_feature = min_item['feature']
         optimal_threshold = min_item['threshold']
@@ -327,12 +313,10 @@ class DecisionTree(object):
 
         pred = np.zeros(X.shape[0])
 
-        
-
         for sample_idx, sample in enumerate(X):
 
             column = 0
-            for depth in range(self.max_depth + 2):
+            for depth in range(self.max_depth + 1):
                 selected_node = self.node_info[depth][column]
 
                 if selected_node['is_leaf'] == 1:                    
@@ -346,7 +330,7 @@ class DecisionTree(object):
                 threshold = selected_node['threshold']
                 node_idx = selected_node['idx']
 
-                for num, node in enumerate(self.node_info[depth+1]):
+                for num, node in enumerate(self.node_info[depth + 1]):
                     if node['idx'] == node_idx + 1 :                        
                         break
 
@@ -431,7 +415,7 @@ def plot_graph(X_train, X_test, y_train, y_test, min_splits = 2):
 
         max_dp = 0
         num_of_nodes = 0
-        for n in range(max_depth+1):
+        for n in range(max_depth + 1):
             if len(tree.node_info[n]) == 0:
                 break
             max_dp += 1
@@ -468,18 +452,6 @@ def plot_graph(X_train, X_test, y_train, y_test, min_splits = 2):
     plt.plot(depth_range, number_of_nodes)
     plt.xlabel('max_depth')
     plt.ylabel('Number of nodes')
-
-
-
-        
-
-
-
-
-
-
-
-
 
     #################
 
