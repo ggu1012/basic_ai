@@ -5,3 +5,4 @@
 2. Bias-variance tradeoff
 3. Ridge and LASSO regression
 4. Decision tree
+5. Adaboost
