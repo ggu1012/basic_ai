@@ -455,5 +455,10 @@ def plot_graph(X_train, X_test, y_train, y_test, min_splits = 2):
 
     #################
 
+    print(accuracy_train)
+    print(accuracy_test)
+    print(final_depth)
+    print(number_of_nodes)
+
 
     
