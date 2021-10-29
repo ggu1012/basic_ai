@@ -50,7 +50,9 @@ class DecisionStump:
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        self.select_feature_split(X, y)      
+
         #################
     
     
@@ -69,7 +71,58 @@ class DecisionStump:
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        decision_info_list = []        
+        full_indice = np.arange(X.shape[0])        
+
+        for feature in range(X.shape[1]):           
+
+            # Get the threshold candidates
+            threshold_candidates = []
+            feature_values = np.sort(np.unique(X[:,feature]))
+            for idx in range(feature_values.size - 1):
+                threshold_value = (feature_values[idx] + feature_values[idx+1])/2
+                threshold_candidates = np.append(threshold_candidates, threshold_value)
+            
+            # Find the classification error for each threshold value
+            for threshold in threshold_candidates:
+                left_indice = full_indice[np.argwhere(X[:,feature] <= threshold).flatten()]
+                right_indice = full_indice[np.argwhere(X[:,feature] > threshold).flatten()]
+
+                # If left and right sizes are the same, take -1 as majority
+                left_pred = [-1 for n in range(left_indice.size)] if \
+                    np.argwhere(y[left_indice] == -1).flatten().size >= left_indice.size / 2 \
+                    else [1 for n in range(left_indice.size)]
+
+                right_pred = [-1 for n in range(right_indice.size)] if \
+                    np.argwhere(y[right_indice] == -1).flatten().size >= right_indice.size / 2 \
+                    else [1 for n in range(right_indice.size)]
+
+                splitted = np.concatenate((y[left_indice], y[right_indice]))
+                predicted = np.concatenate((left_pred, right_pred))
+
+                
+
+                classification_error = self.compute_error(splitted, predicted)
+
+                decision_info = dict()
+                decision_info['feature'] = feature
+                decision_info['threshold'] = threshold
+                decision_info['error'] = classification_error
+                decision_info['left'] = left_pred[0]
+                decision_info['right'] = right_pred[0]
+
+                decision_info_list.append(decision_info)
+
+        
+        optimal_decision_info = min(decision_info_list, key=lambda x:x['error'])
+
+        self.selected_feature = optimal_decision_info['feature']
+        self.threshold = optimal_decision_info['threshold']
+        self.left_prediction = optimal_decision_info['left']
+        self.right_prediction = optimal_decision_info['right']
+        
+
         #################
         
         
@@ -88,7 +141,9 @@ class DecisionStump:
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        out = 1 - np.average(pred == y)
+
         #################
         return out
         
@@ -106,7 +161,15 @@ class DecisionStump:
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        pred = np.zeros(X.shape[0])
+
+        for idx in range(X.shape[0]):
+            if X[idx, self.selected_feature] <= self.threshold:
+                pred[idx] = self.left_prediction
+            else:
+                pred[idx] = self.right_prediction
+
         #################
         return pred
 
