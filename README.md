@@ -6,3 +6,4 @@
 3. Ridge and LASSO regression
 4. Decision tree
 5. Adaboost
+6. K-NN classifier
