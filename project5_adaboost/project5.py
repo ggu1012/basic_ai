@@ -1,4 +1,5 @@
-import numpy as np 
+import numpy as np
+from numpy.random.mtrand import sample
 import pandas as pd
 
 from copy import deepcopy
@@ -10,7 +11,7 @@ def sign(x):
 
 class DecisionStump:
     """DecsionStump class"""
-    
+
     def __init__(self):
         """
         Description:
@@ -30,12 +31,10 @@ class DecisionStump:
         self.threshold = None
         self.left_prediction = None
         self.right_prediction = None
-    
-    
+
     def fit(self, X, y):
-        self.build_stump(X, y)            
-        
-    
+        self.build_stump(X, y)
+
     def build_stump(self, X, y):
         """
         Description:
@@ -51,12 +50,11 @@ class DecisionStump:
         """
         ### CODE HERE ###
 
-        self.select_feature_split(X, y)      
+        self.select_feature_split(X, y)
 
         #################
-    
-    
-    def select_feature_split(self, X, y):       
+
+    def select_feature_split(self, X, y):
         """
         Description:
             Find the best feature split. After find the best feature and threshold,
@@ -72,60 +70,65 @@ class DecisionStump:
         """
         ### CODE HERE ###
 
-        decision_info_list = []        
-        full_indice = np.arange(X.shape[0])        
+        decision_info_list = []
+        full_indice = np.arange(X.shape[0])
 
-        for feature in range(X.shape[1]):           
+        for feature in range(X.shape[1]):
 
             # Get the threshold candidates
             threshold_candidates = []
-            feature_values = np.sort(np.unique(X[:,feature]))
+            feature_values = np.sort(np.unique(X[:, feature]))
             for idx in range(feature_values.size - 1):
-                threshold_value = (feature_values[idx] + feature_values[idx+1])/2
+                threshold_value = (feature_values[idx] + feature_values[idx + 1]) / 2
                 threshold_candidates = np.append(threshold_candidates, threshold_value)
-            
+
             # Find the classification error for each threshold value
             for threshold in threshold_candidates:
-                left_indice = full_indice[np.argwhere(X[:,feature] <= threshold).flatten()]
-                right_indice = full_indice[np.argwhere(X[:,feature] > threshold).flatten()]
+                left_indice = full_indice[
+                    np.argwhere(X[:, feature] <= threshold).flatten()
+                ]
+                right_indice = full_indice[
+                    np.argwhere(X[:, feature] > threshold).flatten()
+                ]
 
                 # If left and right sizes are the same, take -1 as majority
-                left_pred = [-1 for n in range(left_indice.size)] if \
-                    np.argwhere(y[left_indice] == -1).flatten().size >= left_indice.size / 2 \
+                left_pred = (
+                    [-1 for n in range(left_indice.size)]
+                    if np.argwhere(y[left_indice] == -1).flatten().size
+                    >= left_indice.size / 2
                     else [1 for n in range(left_indice.size)]
+                )
 
-                right_pred = [-1 for n in range(right_indice.size)] if \
-                    np.argwhere(y[right_indice] == -1).flatten().size >= right_indice.size / 2 \
+                right_pred = (
+                    [-1 for n in range(right_indice.size)]
+                    if np.argwhere(y[right_indice] == -1).flatten().size
+                    >= right_indice.size / 2
                     else [1 for n in range(right_indice.size)]
+                )
 
                 splitted = np.concatenate((y[left_indice], y[right_indice]))
                 predicted = np.concatenate((left_pred, right_pred))
 
-                
-
                 classification_error = self.compute_error(splitted, predicted)
 
                 decision_info = dict()
-                decision_info['feature'] = feature
-                decision_info['threshold'] = threshold
-                decision_info['error'] = classification_error
-                decision_info['left'] = left_pred[0]
-                decision_info['right'] = right_pred[0]
+                decision_info["feature"] = feature
+                decision_info["threshold"] = threshold
+                decision_info["error"] = classification_error
+                decision_info["left"] = left_pred[0]
+                decision_info["right"] = right_pred[0]
 
                 decision_info_list.append(decision_info)
 
-        
-        optimal_decision_info = min(decision_info_list, key=lambda x:x['error'])
+        optimal_decision_info = min(decision_info_list, key=lambda x: x["error"])
 
-        self.selected_feature = optimal_decision_info['feature']
-        self.threshold = optimal_decision_info['threshold']
-        self.left_prediction = optimal_decision_info['left']
-        self.right_prediction = optimal_decision_info['right']
-        
+        self.selected_feature = optimal_decision_info["feature"]
+        self.threshold = optimal_decision_info["threshold"]
+        self.left_prediction = optimal_decision_info["left"]
+        self.right_prediction = optimal_decision_info["right"]
 
         #################
-        
-        
+
     def compute_error(self, pred, y):
         """
         Description:
@@ -146,8 +149,7 @@ class DecisionStump:
 
         #################
         return out
-        
-    
+
     def predict(self, X):
         """
         Description:
@@ -176,7 +178,7 @@ class DecisionStump:
 
 class AdaBoost:
     """AdaBoost class"""
-    
+
     def __init__(self, num_estimators):
         """
         Description:
@@ -199,23 +201,22 @@ class AdaBoost:
         self.num_estimator = num_estimators
         self.classifiers = []
         self.error_history = []
-        
-    
+
     def fit(self, X, y):
         self.X = X
         self.y = y
-        
+
         ### CODE HERE ###
+
         # initialize the data weight
-        raise NotImplementedError("Erase this line and write down your code.")
-        # self.data_weight = 
+        self.data_weight = np.ones(X.shape[0]) / X.shape[0]
+
         #################
 
         assert self.data_weight.shape == self.y.shape
-        
+
         self.build_classifier()
-        
-    
+
     def build_classifier(self):
         """
         Description:
@@ -227,10 +228,51 @@ class AdaBoost:
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        full_indice = np.arange(self.X.shape[0])
+
+        for stage in range(self.num_estimator):
+
+            stump = DecisionStump()
+
+            if stage == 0:
+                sampled_idx = full_indice
+
+                X_sampled = self.X
+                y_sampled = self.y
+
+            else:
+                sampled_idx = np.random.choice(
+                    full_indice, size=self.X.shape[0], p=self.data_weight, replace=True,
+                )
+
+                X_sampled = self.X[sampled_idx]
+                y_sampled = self.y[sampled_idx]
+
+            stump.fit(X_sampled, y_sampled)
+            pred_unsorted = stump.predict(X_sampled)
+
+            error = np.average(pred_unsorted != y_sampled)
+            self.error_history.append(error)
+
+            # pred = 0 if X[idx] is not sampled in this step
+            pred = np.zeros(pred_unsorted.size)
+            for i in range(pred_unsorted.size):
+                pred[sampled_idx[i]] = pred_unsorted[i]
+
+            coefficient = self.compute_classifier_coefficient(error)
+
+            self.data_weight = self.update_weight(pred, coefficient)
+            self.data_weight = self.normalize_weight()
+
+            stage_classifier = dict()
+            stage_classifier["classifier"] = stump
+            stage_classifier["coefficient"] = coefficient
+
+            self.classifiers.append(stage_classifier)
+
         #################
-    
-    
+
     def compute_classifier_coefficient(self, weighted_error):
         """
         Description:
@@ -244,11 +286,12 @@ class AdaBoost:
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        coefficient = np.log((1 - weighted_error) / weighted_error) / 2
+
         #################
         return coefficient
-        
-        
+
     def update_weight(self, pred, coefficient):
         """
         Description:
@@ -263,11 +306,12 @@ class AdaBoost:
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        weight = self.data_weight * np.exp(-coefficient * self.y * pred)
+
         #################
         return weight
-        
-        
+
     def normalize_weight(self):
         """
         Description:
@@ -277,16 +321,16 @@ class AdaBoost:
             
             
         Returns:
-            weight: (N, ) numpy array. Norlaized data weight.
+            weight: (N, ) numpy array. Normalized data weight.
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        weight = self.data_weight / np.sum(self.data_weight)
+
         #################
         return weight
-        
-    
-    
+
     def predict(self, X):
         """
         Description:
@@ -307,11 +351,21 @@ class AdaBoost:
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        sum_of_wf = np.zeros(X.shape[0])
+
+        for n in range(self.num_estimator):
+            coeff = self.classifiers[n]["coefficient"]
+            stump = self.classifiers[n]["classifier"]
+
+            weak_pred = stump.predict(X)
+            sum_of_wf += weak_pred * coeff
+
+        pred = sign(sum_of_wf)
+
         #################
         return pred
-    
-    
+
     def predict_proba(self, X):
         """
         Description:
@@ -325,11 +379,23 @@ class AdaBoost:
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        proba = np.zeros((X.shape[0], 2))
+
+        for n in range(self.num_estimator):
+            coeff = self.classifiers[n]["coefficient"]
+            stump = self.classifiers[n]["classifier"]
+
+            weak_pred = stump.predict(X)
+            proba[:, 0] += weak_pred * coeff
+
+        proba[:, 0] = 1 / (1 + np.exp(proba[:, 0]))
+        proba[:, 1] = 1 - proba[:, 0]
+
         #################
         return proba
-        
-    
+
+
 def compute_staged_accuracies(classifier_list, X_train, y_train, X_test, y_test):
     """
         Description:
@@ -352,11 +418,29 @@ def compute_staged_accuracies(classifier_list, X_train, y_train, X_test, y_test)
     acc_test = []
 
     for i in range(len(classifier_list)):
-    
+
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        sum_train = np.zeros(X_train.shape[0])
+        sum_test = np.zeros(X_test.shape[0])
+
+        for n in range(i + 1):
+            coeff = classifier_list[n]["coefficient"]
+            stump = classifier_list[n]["classifier"]
+
+            weak_pred_train = stump.predict(X_train)
+            weak_pred_test = stump.predict(X_test)
+
+            sum_train += weak_pred_train * coeff
+            sum_test += weak_pred_test * coeff
+
+        pred_train = sign(sum_train)
+        pred_test = sign(sum_test)
+
+        acc_train.append(np.average(pred_train == y_train))
+        acc_test.append(np.average(pred_test == y_test))
+
         #################
-            
+
     return acc_train, acc_test
-    
-    
+
