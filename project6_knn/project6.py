@@ -1,7 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-
 def accuracy(y_true, y_pred):
     return np.average(y_true == y_pred)
 
@@ -70,21 +69,25 @@ class KNN_Classifier:
 
         ### CODE HERE ###
 
-        dist = []
-        idx = []
-        
+        dist = np.empty((0,self.n_neighbors), int)
+        idx = np.empty((0,self.n_neighbors), int)
+
+        s0 = time.time()
+
+        # distance_btwn_point = pairwise_distances(X, self.X)
+
+        # idx = np.array([np.argsort(row)[0:self.n_neighbors] for row in distance_btwn_point])
+        # dist = np.array([[distance_btwn_point[j, i] for i in idx[j]] for j in range(len(idx))])
+
         for point_idx in range(N):
             
-            distance_btwn_point = [np.sqrt(np.sum((X[point_idx] - self.X[i])**2)) for i in range(self.X.shape[0])]
-
+            distance_btwn_point = np.array([np.sqrt(((X[point_idx] - self.X[i])**2).sum()) for i in range(self.X.shape[0])])
+            
             short_idx = np.argsort(distance_btwn_point)[0:self.n_neighbors]
             short_distance = [distance_btwn_point[i] for i in short_idx]
 
-            idx.append(short_idx)
-            dist.append(short_distance)
-
-        idx = np.reshape(idx, (N, self.n_neighbors))
-        dist = np.reshape(dist, (N, self.n_neighbors))
+            idx = np.vstack((idx, short_idx))
+            dist = np.vstack((dist, short_distance))
 
         ############################
 
@@ -115,7 +118,7 @@ class KNN_Classifier:
             return np.ones(dist.shape)
 
         elif weights == 'inverse distance':
-            return [[(1 / d) if d != 0 else 1 for d in one] for one in dist]
+            return np.array([[(1 / d) if d != 0 else 1 for d in one] for one in dist])
 
         else:
             raise NotImplementedError("Error: Such kernel type is unsupported.")
@@ -143,7 +146,7 @@ class KNN_Classifier:
 
         y_values = np.unique(val)
 
-        cumulated_weights = [np.sum([weights[i] for i in np.argwhere(val==y_val).flatten()]) for y_val in y_values]
+        cumulated_weights = [sum([weights[i] for i in np.argwhere(val==y_val).flatten()]) for y_val in y_values]
         sorted_cumulated_weights_args = np.argsort(cumulated_weights)[::-1]
 
         return y_values[sorted_cumulated_weights_args]
@@ -218,7 +221,7 @@ def stack_accuracy_over_k(
         train_acc = []
         test_acc = []
 
-        xaxis = range(1, 51)        
+        xaxis = range(1, max_k+1)        
         for k in xaxis: # 1 ~ 50
             my_clf = KNN_Classifier(n_neighbors=k, weights=weight_type)
             my_clf.fit(X_train, y_train)
