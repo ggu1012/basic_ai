@@ -72,8 +72,6 @@ class KNN_Classifier:
         dist = np.empty((0,self.n_neighbors), int)
         idx = np.empty((0,self.n_neighbors), int)
 
-        s0 = time.time()
-
         # distance_btwn_point = pairwise_distances(X, self.X)
 
         # idx = np.array([np.argsort(row)[0:self.n_neighbors] for row in distance_btwn_point])
