@@ -7,3 +7,4 @@
 4. Decision tree
 5. Adaboost
 6. K-NN classifier
+8. PCA (Principal Component Analysis)
