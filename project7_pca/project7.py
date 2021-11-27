@@ -36,7 +36,16 @@ class PCA:
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        covariance = np.cov(X.T)
+        eigval, eigvec = np.linalg.eig(covariance)
+
+        arg = np.argsort(eigval)[-self.num_components:][::-1]
+        self.eigenbasis = eigvec[:,arg].T.real
+
+        self.X_mean = np.average(X, axis=0)
+        self.X_std = np.std(X, axis=0).reshape(1,-1)
+
         #################
         
         assert self.eigenbasis.shape == (self.num_components, X.shape[1])
@@ -57,7 +66,15 @@ class PCA:
                 
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        sample_mean = np.average(samples, axis=0)
+        sample_std = np.std(samples, axis=0).reshape(1,-1)
+        standardized_samples = (samples - sample_mean) / sample_std
+        data_reduced = standardized_samples.dot(self.eigenbasis.T)
+
+        self.sample_mean = sample_mean
+        self.sample_std = sample_std
+
         #################        
         assert data_reduced.shape == (samples.shape[0], self.num_components)
 
@@ -82,7 +99,11 @@ class PCA:
                 
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        representations_onto_eigenbasis = np.multiply(sample_decomposed.reshape(-1,1), self.eigenbasis)
+        sample_recovered = sample_decomposed.dot(self.eigenbasis)
+        sample_recovered = self.sample_std * sample_recovered + self.sample_mean
+
         #################
         
         return representations_onto_eigenbasis, sample_recovered
@@ -103,7 +124,11 @@ class FaceRecognizer(PCA):
         Returns:
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        super().__init__(num_components)
+        self.X = X
+        self.y = y
+
         #################
         
     
@@ -118,7 +143,10 @@ class FaceRecognizer(PCA):
         """
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+        
+        self.find_principal_components(self.X)
+        self.database = self.reduce_dimensionality(self.X)
+
         #################
         
     
@@ -137,7 +165,20 @@ class FaceRecognizer(PCA):
         """
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        sample_reduced = self.reduce_dimensionality(X)
+        db_indices = np.empty((0,0), int)
+        distances = np.empty((0,0), float)
+
+        for sample in sample_reduced:
+            distance_btwn_point = np.array([np.sqrt(((sample - self.database[i])**2).sum()) for i in range(self.database.shape[0])])
+            nearest_idx = np.argmin(distance_btwn_point)
+            db_indices = np.append(db_indices, nearest_idx)
+            distances = np.append(distances, distance_btwn_point[nearest_idx])
+
+        pred = self.y[db_indices]
+        distances = distances.reshape((-1, 1))
+
         #################
         
         return pred, distances, db_indices  
