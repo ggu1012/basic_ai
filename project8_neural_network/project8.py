@@ -115,7 +115,15 @@ class NeuralNetwork(object):
         W1, b1, W2, b2, W3, b3 = self.model['W1'], self.model['b1'], self.model['W2'], self.model['b2'], self.model['W3'], self.model['b3']
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        h1 = np.dot(X, W1) + b1
+        z1 = sigmoid(h1)
+        h2 = np.dot(z1, W2) + b2
+        z2 = tanh(h2)
+        h3 = np.dot(z2, W3) + b3
+        y_hat = np.exp(h3) / np.exp(h3).sum(axis=1).reshape(-1,1)
+
+
         ############################
         cache = {'h1': h1, 'z1': z1, 'h2': h2, 'z2': z2, 'h3': h3, 'y_hat': y_hat}
     
@@ -139,7 +147,42 @@ class NeuralNetwork(object):
         h1, z1, h2, z2, h3, y_hat = cache['h1'], cache['z1'], cache['h2'], cache['z2'], cache['h3'], cache['y_hat']
 
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        # softmaxCEloss
+        _dout = deepcopy(y_hat)
+        _dout[np.arange(y.shape[0]), y] = y_hat[np.arange(y.shape[0]), y] -  1
+
+        # 3rd linear layer
+        # upstream _dout
+        dh3 = np.dot(_dout, W3.T)
+        dW3 = np.dot(z2.T, _dout)
+        db3 = _dout.sum(axis=0)
+
+        # 2nd tanh layer
+        # upstream dh3
+        tanhh2 = tanh(h2)
+        dz2 = dh3 * (1-tanhh2) * (1+tanhh2)
+
+        # 2nd linear layer
+        # upstream dz2
+        dh2 = np.dot(dz2, W2.T)
+        dW2 = np.dot(z1.T, dz2)
+        db2 = dz2.sum(axis=0)
+
+        # 1st sigmoid layer
+        # upstream dh2
+        sigm = sigmoid(h1)
+        dz1 = dh2 * sigm * (1-sigm)
+
+        # 1st linear layer
+        # upstream dz1
+        dW1 = np.dot(X.T, dz1)
+        db1 = dz1.sum(axis=0)
+
+        dW3 += 2*self.model['W3']*L2_norm
+        dW2 += 2*self.model['W2']*L2_norm
+        dW1 += 2*self.model['W1']*L2_norm
+
         ############################
         
         grads = dict()
@@ -152,6 +195,13 @@ class NeuralNetwork(object):
 
         return grads
 
+
+    ##################################################################################
+    # TODO: 일단 function arg.로 y_pred(N,)를 쓰지 않고 y_hat(N,M) 사용
+    ##################################################################################
+    ##################################################################################
+    ##################################################################################
+    ##################################################################################
     def compute_loss(self, y_pred, y_true, L2_norm=0.0):
         """
         Descriptions:
@@ -167,7 +217,11 @@ class NeuralNetwork(object):
         W1, b1, W2, b2, W3, b3 = self.model['W1'], self.model['b1'], self.model['W2'], self.model['b2'], self.model['W3'], self.model['b3']
 
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        total_loss = -np.log(y_pred[np.arange(y_true.shape[0]), y_true]).sum()
+        total_loss += (np.linalg.norm(self.model['W3']) + \
+                np.linalg.norm(self.model['W2']) + np.linalg.norm(self.model['W1'])) * L2_norm
+
         ############################
 
         return total_loss
@@ -200,7 +254,15 @@ class NeuralNetwork(object):
         
         for it in range(epoch):
             ### CODE HERE ###
-            raise NotImplementedError("Erase this line and write down your code.")
+
+            y_hat, cache = self.forward_propagation(X_train)
+            loss = self.compute_loss(y_hat, y_train, L2_norm)          
+            grads = self.back_propagation(cache, X_train, y_train, L2_norm)
+
+            for _update in self.model.keys():
+                self.model[_update] -= learning_rate * grads['d' + _update]
+
+
             ################# 
             if (it+1) % 1000 == 0:
                 loss_history.append(loss)
@@ -231,7 +293,10 @@ class NeuralNetwork(object):
 
     def predict(self, X):
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+        y_hat,_ = self.forward_propagation(X)
+        y_pred = np.argmax(y_hat, axis=1).flatten()
+
+        return y_pred
         #################  
 
 
