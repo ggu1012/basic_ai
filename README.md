@@ -7,4 +7,6 @@
 4. Decision tree
 5. Adaboost
 6. K-NN classifier
-8. PCA (Principal Component Analysis)
+7. PCA (Principal Component Analysis)
+8. Neural Network - Handcrafted forward, backprop
+9. Simple MLP/CNN implementation with PyTorch
