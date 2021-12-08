@@ -183,7 +183,6 @@ class NeuralNetwork(object):
             X_val: (numpy array) validation data (N, D)
             y_train: (numpy array) training labels (N,)
             y_val: (numpy array) valiation labels (N, )
-            y_pred: (numpy array) Predicted target (N,)
             learning_rate: (float) Scalar giving learning rate for optimization
             L2_norm: (float) Scalar giving regularization strength.
             epoch: (int) Number of epoch to take
@@ -239,23 +238,30 @@ class NeuralNetwork(object):
 
 def tanh(x):
     ### CODE HERE ###
-    raise NotImplementedError("Erase this line and write down your code.")
+
+    exp = np.exp(-x)
+    out = (1 - exp) / (1 + exp)
+
     #################  
-    return x
+    return out
     
 
 def relu(x):
     ### CODE HERE ###
-    raise NotImplementedError("Erase this line and write down your code.")
+
+    out = np.max([0, x])
+
     ############################
-    return x 
+    return out
 
 
 def sigmoid(x):
     ### CODE HERE ###
-    raise NotImplementedError("Erase this line and write down your code.")
+
+    out = 1 / (1 + np.exp(-x))
+
     ############################
-    return x
+    return out
 
 ######################################################################################
 
@@ -279,7 +285,12 @@ class Linear(object):
             cache: (tupe[numpy array]) Values needed to compute gradients
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")#
+
+        out = x.dot(w) + b
+        cache = (x, w)
+
+        return out, cache
+
         #################  
 
     @staticmethod
@@ -298,7 +309,14 @@ class Linear(object):
         """
 
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        x, w = cache
+        
+        dx = np.dot(dout, w.T)
+        dw = np.dot(x.T, dout)
+        db = dout.sum(axis=0)
+        
+        return dx, dw, db
         #################  
 
 
@@ -317,7 +335,12 @@ class ReLU(object):
             cache: Values needed to compute gradients
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        out = relu(x)
+        cache = out
+
+        return out, cache
+
         #################  
 
     @staticmethod
@@ -333,7 +356,12 @@ class ReLU(object):
             dx: Gradient with respect to x
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        relux = cache
+        dx = dout * (relux != 0)
+
+        return dx
+
         #################  
 
 class Tanh(object):
@@ -351,7 +379,12 @@ class Tanh(object):
             cache: Values needed to compute gradients
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        out = tanh(x)
+        cache = out
+
+        return out, cache
+
         #################  
 
     @staticmethod
@@ -367,7 +400,12 @@ class Tanh(object):
             dx: Gradient with respect to x
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        tanhx  = cache
+        dx = dout * (1-tanhx) * (1+tanhx)
+
+        return dx
+
         #################  
 
 class Sigmoid(object):
@@ -385,7 +423,12 @@ class Sigmoid(object):
             cache: Values needed to compute gradients
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        out = sigmoid(x)
+        cache = out
+
+        return out, cache
+
         #################  
 
     @staticmethod
@@ -401,7 +444,12 @@ class Sigmoid(object):
             dx: Gradient with respect to x
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        sigm = cache
+        dx = sigm * (1-sigm) * dout
+
+        return dx
+
         #################  
 
 
@@ -424,7 +472,19 @@ class SoftmaxWithCEloss(object):
                 cache: Values needed to compute gradients
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        y_hat = np.exp(x) / np.exp(x).sum(axis=1).reshape(-1,1)
+
+        if y is None:            
+            return y_hat
+
+        else:
+
+            loss = -np.log(y_hat[np.arange(y.shape[0]), y]).sum()
+            cache = y_hat, y
+
+            return loss, cache
+
         #################
 
     @staticmethod
@@ -439,7 +499,13 @@ class SoftmaxWithCEloss(object):
             dx: Gradient with respect to x
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        y_hat, y = cache
+
+        dx = y_hat
+        dx[np.arange(y.shape[0]), y] = y_hat[np.arange(y.shape[0]), y] -  1
+
+        return dx
         #################  
 
 
@@ -505,7 +571,13 @@ class NeuralNetwork_module(object):
         cache = {}
         
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")#
+
+        h1, cache['h1'] = Linear.forward(X, W1, b1)
+        z1, cache['z1'] = Sigmoid.forward(h1)        
+        h2, cache['h2'] = Linear.forward(z1, W2, b2)
+        z2, cache['z2'] = Tanh.forward(h2)
+        out, cache['h3'] = Linear.forward(z2, W3, b3)
+
         #################  
 
         if y is None:
@@ -528,7 +600,18 @@ class NeuralNetwork_module(object):
             
         """
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")#
+
+        _dout = SoftmaxWithCEloss.backward(cache['SoftmaxWithCEloss'])
+        dh3, dW3, db3 = Linear.backward(cache['h3'], _dout)
+        dz2 = Tanh.backward(cache['z2'], dh3)
+        dh2, dW2, db2 = Linear.backward(cache['h2'], dz2)
+        dz1 = Sigmoid.backward(cache['z1'], dh2)
+        dh1, dW1, db1 = Linear.backward(cache['h1'], dz1)
+
+        dW3 += 2*self.model['W3']*L2_norm
+        dW2 += 2*self.model['W2']*L2_norm
+        dW1 += 2*self.model['W1']*L2_norm
+
         ###########################################
         grads = dict()
         grads['dW3'] = dW3
@@ -568,7 +651,17 @@ class NeuralNetwork_module(object):
         
         for it in range(epoch):
             ### CODE HERE ###
-            raise NotImplementedError("Erase this line and write down your code.")
+
+            cache, loss = self.forward(X_train, y_train)
+            loss += (np.linalg.norm(self.model['W3']) + \
+                np.linalg.norm(self.model['W2']) + np.linalg.norm(self.model['W1'])) * L2_norm
+
+            grads = self.backward(cache, L2_norm)
+
+            for _update in self.model.keys():
+                self.model[_update] -= learning_rate * grads['d' + _update]
+
+
             ################# 
             if (it+1) % 1000 == 0:
                 loss_history.append(loss)
@@ -600,5 +693,10 @@ class NeuralNetwork_module(object):
 
     def predict(self, X):
         ### CODE HERE ###
-        raise NotImplementedError("Erase this line and write down your code.")
+
+        y_hat = self.forward(X)
+        y_pred = np.argmax(y_hat, axis=1).flatten()
+
+        return y_pred
+
         #################  
