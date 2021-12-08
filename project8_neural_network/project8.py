@@ -314,7 +314,7 @@ def tanh(x):
 def relu(x):
     ### CODE HERE ###
 
-    out = np.max([0, x])
+    out = np.maximum(0, x)
 
     ############################
     return out
