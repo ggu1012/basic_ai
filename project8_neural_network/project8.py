@@ -604,8 +604,24 @@ class NeuralNetwork_module(object):
             self.model['b1'] = np.zeros((1, nn_hdim1))
             self.model['W2'] = np.random.randn(nn_hdim1, nn_hdim2)
             self.model['b2'] = np.zeros((1, nn_hdim2))
+
+            ### 2 hidden layers
             self.model['W3'] = np.random.randn(nn_hdim2, nn_output_dim)
             self.model['b3'] = np.zeros((1, nn_output_dim))
+
+            ### 3 hidden layers
+            # self.model['W3'] = np.random.randn(nn_hdim2, nn_hdim2)
+            # self.model['b3'] = np.zeros((1, nn_hdim2))
+            # self.model['W4'] = np.random.randn(nn_hdim2, nn_output_dim)
+            # self.model['b4'] = np.zeros((1, nn_output_dim))
+
+            ### 4 hidden layers
+            # self.model['W3'] = np.random.randn(nn_hdim2, nn_hdim2)
+            # self.model['b3'] = np.zeros((1, nn_hdim2))
+            # self.model['W4'] = np.random.randn(nn_hdim2, nn_hdim2)
+            # self.model['b4'] = np.zeros((1, nn_hdim2))
+            # self.model['W5'] = np.random.randn(nn_hdim2, nn_output_dim)
+            # self.model['b5'] = np.zeros((1, nn_output_dim))
 
         elif init == "constant":
             self.model['W1'] = np.ones((nn_input_dim, nn_hdim1))
@@ -637,11 +653,34 @@ class NeuralNetwork_module(object):
         
         ### CODE HERE ###
 
+        
+        
+
         h1, cache['h1'] = Linear.forward(X, W1, b1)
         z1, cache['z1'] = Sigmoid.forward(h1)        
         h2, cache['h2'] = Linear.forward(z1, W2, b2)
         z2, cache['z2'] = Tanh.forward(h2)
+
+        ### 2 hidden layers
         out, cache['h3'] = Linear.forward(z2, W3, b3)
+
+        ### 3 hidden layers
+        # W4, b4 = self.model['W4'], self.model['b4']
+        # h3, cache['h3'] = Linear.forward(z2, W3, b3)
+        # z3, cache['z3'] = ReLU.forward(h3)
+        # out, cache['h4'] = Linear.forward(z3, W4, b4)
+
+        ### 4 hidden layers
+        # W5, b5 = self.model['W5'], self.model['b5']
+        # W4, b4 = self.model['W4'], self.model['b4']
+        # h3, cache['h3'] = Linear.forward(z2, W3, b3)
+        # z3, cache['z3'] = ReLU.forward(h3)
+        # h4, cache['h4'] = Linear.forward(z3, W4, b4)
+        # z4, cache['z4'] = ReLU.forward(h4)
+        # out, cache['h5'] = Linear.forward(z4, W5, b5)
+
+
+
 
         #################  
 
@@ -667,7 +706,36 @@ class NeuralNetwork_module(object):
         ### CODE HERE ###
 
         _dout = SoftmaxWithCEloss.backward(cache['SoftmaxWithCEloss'])
+
+        ### 4 hidden layers
+        # dh5, dW5, db5 = Linear.backward(cache['h5'], _dout)
+        # dz4 = ReLU.backward(cache['z4'], dh5)
+        # dh4, dW4, db4 = Linear.backward(cache['h4'], dz4)
+        # dz3 = ReLU.backward(cache['z3'], dh4)
+        # dh3, dW3, db3 = Linear.backward(cache['h3'], dz3)
+        # dW5 += 2*self.model['W5']*L2_norm
+        # dW4 += 2*self.model['W4']*L2_norm
+        # grads = dict()
+        # grads['dW5'] = dW5
+        # grads['db5'] = db5
+        # grads['dW4'] = dW4
+        # grads['db4'] = db4
+
+
+        ### 3 hidden layers
+        # dh4, dW4, db4 = Linear.backward(cache['h4'], _dout)
+        # dz3 = ReLU.backward(cache['z3'], dh4)
+        # dh3, dW3, db3 = Linear.backward(cache['h3'], dz3)
+        # dW4 += 2*self.model['W4']*L2_norm
+        # grads = dict()
+        # grads['dW4'] = dW4
+        # grads['db4'] = db4     
+
+
+        ### 2 hidden layers
         dh3, dW3, db3 = Linear.backward(cache['h3'], _dout)
+
+
         dz2 = Tanh.backward(cache['z2'], dh3)
         dh2, dW2, db2 = Linear.backward(cache['h2'], dz2)
         dz1 = Sigmoid.backward(cache['z1'], dh2)
@@ -678,7 +746,7 @@ class NeuralNetwork_module(object):
         dW1 += 2*self.model['W1']*L2_norm
 
         ###########################################
-        grads = dict()
+        grads = dict() # comment this line for 3, 4 layers
         grads['dW3'] = dW3
         grads['db3'] = db3
         grads['dW2'] = dW2
